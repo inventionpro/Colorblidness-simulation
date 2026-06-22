@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Lexend, Arial, sans-serif;
+        color: white;
+        background-color: black;
+      }
+      input, select {
+        font-family: inherit;
+        color: inherit;
+        border: 1px currentColor solid;
+        border-radius: 5px;
+        background: none;
+      }
+      canvas {
+        height: 50dvh;
+      }
+    </style>
+  </head>
+  <body>
+    <label>Presets: <select id="presets">
+      <option>Regular</option>
+      <option>Protanopia</option>
+      <option>Protanomaly</option>
+      <option>Deuteranopia</option>
+      <option>Deuteranomaly</option>
+      <option>Tritanopia</option>
+      <option>Tritanomaly</option>
+      <option>Achromatopsia</option>
+    </select></label>
+    <input type="file" id="file" accept="image/*">
+    <canvas id="canvas"></canvas>
+    <script>
+      let preset = {
+        Regular: [1,0,0,0,1,0,0,0,1],
+        Protanopia: [0.567, 0.433, 0, 0.558, 0.442, 0, 0, 0.242, 0.758],
+        Protanomaly: [0.817, 0.183, 0, 0.333, 0.667, 0, 0, 0.125, 0.875],
+        Deuteranopia: [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7],
+        Deuteranomaly: [0.8, 0.2, 0, 0.258, 0.742, 0, 0, 0.142, 0.858],
+        Tritanopia: [0.950, 0.05, 0, 0, 0.433, 0.567, 0, 0.475, 0.525],
+        Tritanomaly: [0.967, 0.033, 0, 0, 0.733, 0.267, 0, 0.183, 0.817],
+        Achromatopsia: [0.299, 0.587, 0.114, 0.299, 0.587, 0.114, 0.299, 0.587, 0.114]
+      };
+
+      let img = new Image();
+      img.style.display = 'none';
+      document.body.appendChild(img);
+
+      let ctx = canvas.getContext('2d');
+      function drawImage() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let m = preset[presets.value];
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          if (imageData.data[i+3]===0) continue;
+          let r = imageData.data[i];
+          let g = imageData.data[i+1];
+          let b = imageData.data[i+2];
+          imageData.data[i] = m[0]*r + m[1]*g + m[2]*b;
+          imageData.data[i+1] = m[3]*r + m[4]*g + m[5]*b;
+          imageData.data[i+2] = m[6]*r + m[7]*g + m[8]*b;
+        }
+        ctx.putImageData(imageData, 0, 0);
+      }
+      presets.onchange = drawImage;
+      file.onchange=()=>{
+        if (!file.files[0]) return;
+        img.onload = ()=>{
+          canvas.width = img.width;
+          canvas.height = img.height;
+          drawImage();
+        };
+        img.src = URL.createObjectURL(file.files[0]);
+        file.value = '';
+      };
+    </script>
+  </body>
+</html>

@@ -1,1 +1,1 @@
-# Colorblidness-simulation
+# Colorblidness simulation
